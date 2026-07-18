@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>風の計器盤 | Wind Monitor</title>
+<style>
+  :root{
+    --navy: #17202e; --navy-deep: #0e1420; --dial: #f2ede1; --dial-line: #2b3648;
+    --brass: #c9a961; --brass-dim: #8d7648;
+    --calm: #6fa8c9; --good: #3f9d6f; --caution: #d9932f; --alert: #c94f3e;
+    --ink: #eae6da; --ink-dim: #9aa3b2;
+  }
+  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body{ margin:0; padding:0; height:100%;
+    background: radial-gradient(ellipse at 50% -10%, #223049 0%, var(--navy) 45%, var(--navy-deep) 100%);
+    font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic", system-ui, sans-serif;
+    color: var(--ink); overscroll-behavior: none; }
+  .app{ max-width: 480px; margin: 0 auto; min-height: 100dvh; padding: 18px 18px 32px;
+    display: flex; flex-direction: column; gap: 14px; }
+  header{ display:flex; justify-content: space-between; align-items: baseline; padding: 4px 4px 0; }
+  .brand{ font-size: 13px; letter-spacing: 0.14em; color: var(--brass); text-transform: uppercase; }
+  .brand small{ display:block; color: var(--ink-dim); letter-spacing: 0.05em; font-size: 11px; margin-top:2px; }
+  .status{ display:flex; align-items:center; gap:6px; font-size:12px; color: var(--ink-dim); }
+  .status .dot{ width:8px; height:8px; border-radius:50%; background: var(--ink-dim); transition: background .3s; }
+  .status.ok .dot{ background: var(--good); box-shadow: 0 0 8px var(--good); }
+  .status.err .dot{ background: var(--alert); box-shadow: 0 0 8px var(--alert); }
+  .panel{ background: linear-gradient(180deg, #1c2537, #141b29); border: 1px solid #2c3850;
+    border-radius: 20px; padding: 18px 16px;
+    box-shadow: 0 20px 40px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04); }
+  .station-name{ font-size: 16px; font-weight: 800; color: var(--ink); }
+  .station-time{ font-size: 12px; color: var(--ink-dim); margin-top: 2px; }
+  .info-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin-top: 14px; }
+  .info-label{ font-size: 11px; color: var(--ink-dim); letter-spacing: 0.04em; }
+  .info-val{ font-size: 19px; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .info-val .unit{ font-size: 12px; color: var(--ink-dim); font-weight: 500; margin-left:2px; }
+  .dial-wrap{ display:flex; justify-content:center; margin: 14px 0 4px; }
+  svg#compass{ width: 100%; max-width: 220px; height:auto; }
+  .dial-face{ fill: var(--dial); }
+  .dial-ring{ fill:none; stroke: var(--dial-line); }
+  .tick-major{ stroke:#2b3648; stroke-width:2.5; }
+  .tick-minor{ stroke:#2b3648; stroke-width:1.2; opacity:0.6; }
+  .dir-label{ fill:#33405a; font-size:15px; font-weight:700; font-family: system-ui, sans-serif; }
+  .needle{ transition: transform 0.6s cubic-bezier(.34,1.4,.64,1); transform-origin: 150px 150px; }
+  .needle-n{ fill: var(--brass); }
+  .needle-s{ fill: #7a6640; }
+  .hub{ fill: var(--navy-deep); stroke: var(--brass); stroke-width:2; }
+  .center-deg{ fill:#33405a; font-size:22px; font-weight:800; font-family: system-ui, sans-serif; }
+  .dir-word{ text-align:center; font-size:14px; color: var(--ink-dim); margin-top: 4px; }
+  .dir-word b{ color: var(--ink); font-size:16px; }
+  .speed-row{ display:flex; align-items:flex-end; justify-content:center; gap:10px; margin-top: 14px; }
+  .speed-num{ font-size: 56px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -1px; }
+  .speed-unit{ font-size: 17px; color: var(--ink-dim); padding-bottom: 7px; cursor:pointer; border-bottom: 1px dashed var(--ink-dim); }
+  .speed-cap{ text-align:center; font-size:12px; color: var(--ink-dim); margin-top:2px; }
+  .meter{ position: relative; height: 10px; border-radius: 6px;
+    background: linear-gradient(90deg, var(--calm) 0%, var(--good) 30%, var(--caution) 60%, var(--alert) 100%);
+    margin-top: 14px; opacity: 0.35; }
+  .meter .pin{ position:absolute; top:-5px; width:3px; height:20px; background: var(--ink);
+    border-radius:2px; transform: translateX(-50%); box-shadow: 0 0 6px rgba(0,0,0,0.6); transition: left 0.6s ease; }
+  .badge-wrap{ display:flex; justify-content:center; margin-top: 14px; }
+  .badge{ display:inline-block; padding: 7px 16px; border-radius: 999px; font-size: 14px; font-weight:700; }
+  .badge.calm{ background: rgba(111,168,201,0.18); color: var(--calm); border:1px solid rgba(111,168,201,0.4);}
+  .badge.good{ background: rgba(63,157,111,0.18); color: var(--good); border:1px solid rgba(63,157,111,0.4);}
+  .badge.caution{ background: rgba(217,147,47,0.18); color: var(--caution); border:1px solid rgba(217,147,47,0.4);}
+  .badge.alert{ background: rgba(201,79,62,0.18); color: var(--alert); border:1px solid rgba(201,79,62,0.4);}
+  .chart-title{ display:flex; justify-content: space-between; align-items:baseline; margin-bottom: 8px; }
+  .chart-title h4{ margin:0; font-size: 13px; letter-spacing:0.04em; color: var(--brass); font-weight:700; }
+  .legend{ display:flex; gap:12px; font-size:11px; color: var(--ink-dim); }
+  .legend span{ display:inline-flex; align-items:center; gap:4px; }
+  .legend i{ width:10px; height:3px; border-radius:2px; display:inline-block; }
+  canvas.chart{ width:100%; display:block; }
+  .meta{ display:flex; justify-content: space-between; font-size:12px; color: var(--ink-dim); padding: 2px 4px; }
+  .note{ font-size: 12px; color: var(--ink-dim); text-align:center; line-height:1.7; padding: 0 10px; }
+  .gear{ background:none; border:none; color: var(--ink-dim); font-size:18px; cursor:pointer; padding: 2px 4px; }
+  dialog#settings{ border:none; border-radius:16px; padding:0; width: 88%; max-width: 380px; background: var(--navy); color: var(--ink); }
+  dialog#settings::backdrop{ background: rgba(0,0,0,0.55); }
+  .settings-inner{ padding: 20px; max-height: 80vh; overflow-y:auto; }
+  .settings-inner h3{ margin:0 0 6px; font-size:15px; color: var(--brass); }
+  .settings-inner p.hint{ font-size:11px; color: var(--ink-dim); margin: 0 0 10px; line-height:1.6; }
+  .settings-inner label{ display:block; font-size:12px; color: var(--ink-dim); margin: 12px 0 4px; }
+  .settings-inner input{ width:100%; padding:9px 10px; border-radius:8px; border:1px solid #2c3850;
+    background:#111826; color: var(--ink); font-size:14px; }
+  .settings-inner .row2{ display:flex; gap:10px; }
+  .settings-inner .row2 > div{ flex:1; }
+  .settings-btns{ display:flex; gap:10px; margin-top:18px; }
+  .settings-btns button{ flex:1; padding:10px; border-radius:8px; border:none; font-size:14px; font-weight:700; cursor:pointer; }
+  .btn-save{ background: var(--brass); color: #241d0d; }
+  .btn-close{ background:#26314a; color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="brand">WIND MONITOR<small>風況モニター（Ambient連携）</small></div>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div class="status" id="status"><span class="dot"></span><span id="statusText">接続中…</span></div>
+      <button class="gear" id="openSettings" aria-label="設定">⚙</button>
+    </div>
+  </header>
+
+  <div class="panel">
+    <div class="station-name" id="stationName">計測地点</div>
+    <div class="station-time" id="stationTime">最終更新: --</div>
+
+    <div class="info-grid">
+      <div class="info-cell">
+        <div class="info-label">風向</div>
+        <div class="info-val" id="infoDir">-- <span class="unit">°</span></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">最大瞬間風速</div>
+        <div class="info-val" id="infoMax">-- <span class="unit">m/s</span></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">電源電圧</div>
+        <div class="info-val" id="infoBatt">-- <span class="unit">V</span></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">電波強度</div>
+        <div class="info-val" id="infoRssi">-- <span class="unit">dBm</span></div>
+      </div>
+    </div>
+
+    <div class="dial-wrap">
+      <svg id="compass" viewBox="0 0 300 300">
+        <circle class="dial-face" cx="150" cy="150" r="140"/>
+        <circle class="dial-ring" cx="150" cy="150" r="140" stroke-width="2"/>
+        <circle class="dial-ring" cx="150" cy="150" r="118" stroke-width="1"/>
+        <g id="ticks"></g>
+        <text class="dir-label" x="150" y="34" text-anchor="middle">N</text>
+        <text class="dir-label" x="266" y="156" text-anchor="middle">E</text>
+        <text class="dir-label" x="150" y="278" text-anchor="middle">S</text>
+        <text class="dir-label" x="34" y="156" text-anchor="middle">W</text>
+        <g class="needle" id="needle">
+          <polygon class="needle-n" points="150,42 140,150 160,150"/>
+          <polygon class="needle-s" points="150,258 140,150 160,150"/>
+        </g>
+        <circle class="hub" cx="150" cy="150" r="15"/>
+        <text class="center-deg" x="150" y="196" text-anchor="middle" id="degText">--°</text>
+      </svg>
+    </div>
+    <div class="dir-word">平均風向 <b id="cardinalWord">--</b> から</div>
+
+    <div class="speed-row">
+      <div class="speed-num" id="speedNum">--</div>
+      <div class="speed-unit" id="unitToggle">m/s</div>
+    </div>
+    <div class="speed-cap">平均風速（直近の受信間隔平均）</div>
+
+    <div class="meter"><div class="pin" id="meterPin" style="left:0%"></div></div>
+    <div class="badge-wrap"><div class="badge calm" id="badge">受信待ち</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="chart-title">
+      <h4>風向の推移</h4>
+      <div class="legend"><span><i style="background:var(--brass)"></i>平均風向</span></div>
+    </div>
+    <canvas class="chart" id="chartDir" height="120"></canvas>
+  </div>
+
+  <div class="panel">
+    <div class="chart-title">
+      <h4>風速の推移</h4>
+      <div class="legend">
+        <span><i style="background:#5b8dd6"></i>平均</span>
+        <span><i style="background:#d65b5b"></i>最大瞬間</span>
+      </div>
+    </div>
+    <canvas class="chart" id="chartSpeed" height="120"></canvas>
+  </div>
+
+  <div class="meta">
+    <span id="bufferInfo">記録: 0件</span>
+    <span id="rangeInfo"></span>
+  </div>
+
+  <p class="note">データはAmbient（ambidata.io）に蓄積された観測局の送信履歴を直接読み込んで表示しています。数値は目安であり、実際のフライト判断はご自身の技量と現地状況の確認に基づいて行ってください。</p>
+</div>
+
+<dialog id="settings">
+  <div class="settings-inner">
+    <h3>接続設定</h3>
+    <p class="hint">Google Apps Script中継プロキシのURL（/execで終わるもの）を入力してください。リードキーはプロキシ側に保存されるため、ここには入力不要です。</p>
+
+    <label for="nameInput">地点名（表示用）</label>
+    <input id="nameInput" type="text" placeholder="神ノ倉山テイクオフ">
+
+    <label for="gasUrlInput">プロキシURL</label>
+    <input id="gasUrlInput" type="text" placeholder="https://script.google.com/macros/s/xxxx/exec">
+
+    <div class="row2">
+      <div>
+        <label for="stationInput">局番</label>
+        <input id="stationInput" type="text" placeholder="1">
+      </div>
+      <div>
+        <label for="intervalInput">更新間隔（秒）</label>
+        <input id="intervalInput" type="number" min="5" value="30">
+      </div>
+    </div>
+    <label for="countInput">取得件数</label>
+    <input id="countInput" type="number" min="10" max="1000" value="200">
+    <div class="row2">
+      <div>
+        <label for="goodInput">良好開始 (m/s)</label>
+        <input id="goodInput" type="number" step="0.5" value="1.5">
+      </div>
+      <div>
+        <label for="cautionInput">注意 (m/s)</label>
+        <input id="cautionInput" type="number" step="0.5" value="5">
+      </div>
+    </div>
+    <label for="alertInput">強風警戒 (m/s)</label>
+    <input id="alertInput" type="number" step="0.5" value="8">
+
+    <div class="settings-btns">
+      <button class="btn-close" id="closeSettings">閉じる</button>
+      <button class="btn-save" id="saveSettings">保存して再接続</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+/* =====================================================================
+   Ambientのチャネルデータ形式（ゲートウェイのスケッチに合わせた割当）
+   d1: 最大瞬間風速(MXS) m/s
+   d2: 平均風速(AVS)     m/s
+   d3: 平均風向(AVD)     度(0-360)
+   d4: 電池電圧(BAT)     V
+   d5: RSSI              dBm
+   ===================================================================== */
+
+const DEFAULTS = {
+  name: "計測地点",
+  gasUrl: "",
+  station: "1",
+  interval: 30,
+  count: 200,
+  goodFrom: 1.5,
+  caution: 5,
+  alert: 8
+};
+
+const state = loadSettings();
+let unit = "ms";
+let pollTimer = null;
+let buffer = []; // [{t, mxs, avs, avd, bat, rssi}]  ascending by time
+
+const els = {
+  needle: document.getElementById("needle"),
+  degText: document.getElementById("degText"),
+  cardinalWord: document.getElementById("cardinalWord"),
+  speedNum: document.getElementById("speedNum"),
+  unitToggle: document.getElementById("unitToggle"),
+  meterPin: document.getElementById("meterPin"),
+  badge: document.getElementById("badge"),
+  status: document.getElementById("status"),
+  statusText: document.getElementById("statusText"),
+  stationName: document.getElementById("stationName"),
+  stationTime: document.getElementById("stationTime"),
+  infoDir: document.getElementById("infoDir"),
+  infoMax: document.getElementById("infoMax"),
+  infoBatt: document.getElementById("infoBatt"),
+  infoRssi: document.getElementById("infoRssi"),
+  bufferInfo: document.getElementById("bufferInfo"),
+  rangeInfo: document.getElementById("rangeInfo"),
+};
+
+drawTicks();
+initSettingsUI();
+els.stationName.textContent = state.name;
+redrawAll();
+startPolling();
+
+function loadSettings(){
+  try{
+    const saved = JSON.parse(localStorage.getItem("windDisplaySettings2") || "{}");
+    return Object.assign({}, DEFAULTS, saved);
+  }catch(e){ return Object.assign({}, DEFAULTS); }
+}
+function saveSettingsToStorage(s){ localStorage.setItem("windDisplaySettings2", JSON.stringify(s)); }
+
+function initSettingsUI(){
+  document.getElementById("nameInput").value = state.name;
+  document.getElementById("gasUrlInput").value = state.gasUrl;
+  document.getElementById("stationInput").value = state.station;
+  document.getElementById("intervalInput").value = state.interval;
+  document.getElementById("countInput").value = state.count;
+  document.getElementById("goodInput").value = state.goodFrom;
+  document.getElementById("cautionInput").value = state.caution;
+  document.getElementById("alertInput").value = state.alert;
+
+  const dialog = document.getElementById("settings");
+  document.getElementById("openSettings").onclick = () => dialog.showModal();
+  document.getElementById("closeSettings").onclick = () => dialog.close();
+  document.getElementById("saveSettings").onclick = () => {
+    state.name = document.getElementById("nameInput").value.trim() || DEFAULTS.name;
+    state.gasUrl = document.getElementById("gasUrlInput").value.trim();
+    state.station = document.getElementById("stationInput").value.trim() || DEFAULTS.station;
+    state.interval = Math.max(5, parseInt(document.getElementById("intervalInput").value) || DEFAULTS.interval);
+    state.count = Math.max(10, parseInt(document.getElementById("countInput").value) || DEFAULTS.count);
+    state.goodFrom = parseFloat(document.getElementById("goodInput").value) || DEFAULTS.goodFrom;
+    state.caution = parseFloat(document.getElementById("cautionInput").value) || DEFAULTS.caution;
+    state.alert = parseFloat(document.getElementById("alertInput").value) || DEFAULTS.alert;
+    saveSettingsToStorage(state);
+    els.stationName.textContent = state.name;
+    dialog.close();
+    startPolling();
+  };
+
+  els.unitToggle.onclick = () => {
+    unit = unit === "ms" ? "kmh" : "ms";
+    els.unitToggle.textContent = unit === "ms" ? "m/s" : "km/h";
+    redrawAll();
+  };
+}
+
+function startPolling(){
+  if (pollTimer) clearInterval(pollTimer);
+  fetchData();
+  pollTimer = setInterval(fetchData, state.interval * 1000);
+}
+
+function parseAmbientTime(s){
+  // "YYYY-MM-DD HH:MM:SS" -> epoch ms (ローカルタイムとして解釈)
+  const m = String(s).match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
+  if (!m) return Date.now();
+  return new Date(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +m[6]).getTime();
+}
+
+async function fetchData(){
+  if (!state.gasUrl){
+    setStatus(false, "プロキシURL未設定");
+    return;
+  }
+  try{
+    const sep = state.gasUrl.includes("?") ? "&" : "?";
+    const url = `${state.gasUrl}${sep}station=${encodeURIComponent(state.station)}&n=${state.count}`;
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const raw = await res.json();
+    if (!Array.isArray(raw)) throw new Error("形式不正");
+
+    buffer = raw.map(r => ({
+      t: parseAmbientTime(r.created),
+      mxs: r.d1 !== undefined && r.d1 !== null && r.d1 !== "" ? Number(r.d1) : null,
+      avs: r.d2 !== undefined && r.d2 !== null && r.d2 !== "" ? Number(r.d2) : null,
+      avd: r.d3 !== undefined && r.d3 !== null && r.d3 !== "" ? Number(r.d3) : null,
+      bat: r.d4 !== undefined && r.d4 !== null && r.d4 !== "" ? Number(r.d4) : null,
+      rssi: r.d5 !== undefined && r.d5 !== null && r.d5 !== "" ? Number(r.d5) : null,
+    })).sort((a,b) => a.t - b.t);
+
+    setStatus(true);
+    redrawAll();
+  }catch(err){
+    setStatus(false, err.message);
+  }
+}
+
+function setStatus(ok, msg){
+  els.status.className = "status " + (ok ? "ok" : "err");
+  els.statusText.textContent = ok ? "接続中" : "未接続 (" + (msg || "確認中") + ")";
+}
+
+function redrawAll(){
+  const latest = buffer[buffer.length - 1];
+  if (!latest){
+    els.bufferInfo.textContent = "記録: 0件";
+    drawEmptyCharts();
+    return;
+  }
+
+  if (latest.avd !== null){
+    const dirDeg = ((latest.avd % 360) + 360) % 360;
+    els.needle.style.transform = `rotate(${dirDeg}deg)`;
+    els.degText.textContent = Math.round(dirDeg) + "°";
+    els.cardinalWord.textContent = degToCardinalJa(dirDeg);
+    els.infoDir.innerHTML = degToCardinalJa(dirDeg) + ` <span class="unit">${Math.round(dirDeg)}°</span>`;
+  }
+
+  const unitLabel = unit === "ms" ? "m/s" : "km/h";
+  const conv = v => (v === null || !isFinite(v)) ? null : (unit === "ms" ? v : v * 3.6);
+
+  const dispAvs = conv(latest.avs);
+  els.speedNum.textContent = dispAvs !== null ? dispAvs.toFixed(1) : "--";
+
+  const dispMxs = conv(latest.mxs);
+  els.infoMax.innerHTML = (dispMxs !== null ? dispMxs.toFixed(1) : "--") + ` <span class="unit">${unitLabel}</span>`;
+
+  els.infoBatt.innerHTML = (latest.bat !== null ? latest.bat.toFixed(2) : "--") + ' <span class="unit">V</span>';
+  els.infoRssi.innerHTML = (latest.rssi !== null ? latest.rssi : "--") + ' <span class="unit">dBm</span>';
+
+  const pct = latest.avs !== null ? Math.max(0, Math.min(100, (latest.avs / (state.alert * 1.4)) * 100)) : 0;
+  els.meterPin.style.left = pct + "%";
+  const level = classify(latest.avs);
+  els.badge.className = "badge " + level.cls;
+  els.badge.textContent = level.label;
+
+  els.stationTime.textContent = "最終更新: " + new Date(latest.t).toLocaleString("ja-JP");
+  els.bufferInfo.textContent = "記録: " + buffer.length + "件";
+  if (buffer.length > 1){
+    const span = (buffer[buffer.length-1].t - buffer[0].t) / 60000;
+    els.rangeInfo.textContent = "表示期間: 約" + Math.round(span) + "分";
+  }
+
+  drawDirChart();
+  drawSpeedChart();
+}
+
+function classify(speedMs){
+  if (speedMs === null || !isFinite(speedMs)) return { cls: "calm", label: "受信待ち" };
+  if (speedMs < state.goodFrom) return { cls: "calm", label: "穏やか" };
+  if (speedMs < state.caution) return { cls: "good", label: "良好" };
+  if (speedMs < state.alert) return { cls: "caution", label: "やや強い風・注意" };
+  return { cls: "alert", label: "強風・警戒" };
+}
+
+function degToCardinalJa(deg){
+  const dirs = ["北","北北東","北東","東北東","東","東南東","南東","南南東","南","南南西","南西","西南西","西","西北西","北西","北北西"];
+  const idx = Math.round(deg / 22.5) % 16;
+  return dirs[idx];
+}
+
+function drawTicks(){
+  const g = document.getElementById("ticks");
+  const cx = 150, cy = 150;
+  for (let deg = 0; deg < 360; deg += 10){
+    const isMajor = deg % 30 === 0;
+    const rOuter = 140;
+    const rInner = isMajor ? 122 : 130;
+    const rad = (deg - 90) * Math.PI / 180;
+    const x1 = cx + rOuter * Math.cos(rad);
+    const y1 = cy + rOuter * Math.sin(rad);
+    const x2 = cx + rInner * Math.cos(rad);
+    const y2 = cy + rInner * Math.sin(rad);
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+    line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+    line.setAttribute("class", isMajor ? "tick-major" : "tick-minor");
+    g.appendChild(line);
+  }
+}
+
+function setupCanvas(canvas){
+  const dpr = window.devicePixelRatio || 1;
+  const cssWidth = canvas.parentElement.clientWidth;
+  const cssHeight = parseInt(canvas.getAttribute("height")) || 120;
+  canvas.style.width = cssWidth + "px";
+  canvas.style.height = cssHeight + "px";
+  canvas.width = cssWidth * dpr;
+  canvas.height = cssHeight * dpr;
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return { ctx, w: cssWidth, h: cssHeight };
+}
+
+function drawChartFrame(ctx, w, h, pad, yTicks){
+  ctx.clearRect(0,0,w,h);
+  ctx.strokeStyle = "#263048";
+  ctx.fillStyle = "#7d879a";
+  ctx.font = "10px system-ui, sans-serif";
+  ctx.lineWidth = 1;
+  yTicks.forEach(t => {
+    const y = pad.top + (1 - t.frac) * (h - pad.top - pad.bottom);
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(w - pad.right, y);
+    ctx.stroke();
+    ctx.fillText(t.label, 2, y + 3);
+  });
+}
+
+function xPos(t, tMin, tMax, w, pad){
+  if (tMax === tMin) return pad.left;
+  return pad.left + ((t - tMin) / (tMax - tMin)) * (w - pad.left - pad.right);
+}
+
+function drawTimeLabels(ctx, w, h, pad, tMin, tMax){
+  ctx.fillStyle = "#7d879a";
+  ctx.font = "10px system-ui, sans-serif";
+  const steps = 4;
+  for (let i=0;i<=steps;i++){
+    const t = tMin + (tMax - tMin) * (i/steps);
+    const x = xPos(t, tMin, tMax, w, pad);
+    const label = new Date(t).toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"});
+    ctx.fillText(label, Math.min(Math.max(x-16,pad.left), w-pad.right-30), h - 4);
+  }
+}
+
+function drawEmptyCharts(){
+  ["chartDir","chartSpeed"].forEach(id => {
+    const canvas = document.getElementById(id);
+    const {ctx,w,h} = setupCanvas(canvas);
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = "#7d879a";
+    ctx.font = "12px system-ui, sans-serif";
+    ctx.fillText("データ待機中…（設定からプロキシURLを入力してください）", 6, h/2);
+  });
+}
+
+function drawDirChart(){
+  const canvas = document.getElementById("chartDir");
+  const {ctx,w,h} = setupCanvas(canvas);
+  const pad = {left:26, right:8, top:6, bottom:16};
+  const yTicks = [
+    {frac:1, label:"北"}, {frac:0.75,label:"東"}, {frac:0.5,label:"南"},
+    {frac:0.25,label:"西"}, {frac:0, label:"北"}
+  ];
+  drawChartFrame(ctx, w, h, pad, yTicks);
+  if (buffer.length < 2) return;
+  const tMin = buffer[0].t, tMax = buffer[buffer.length-1].t;
+  ctx.fillStyle = "#c9a961";
+  buffer.forEach(p => {
+    if (p.avd === null || !isFinite(p.avd)) return;
+    const x = xPos(p.t, tMin, tMax, w, pad);
+    const frac = (((p.avd % 360)+360)%360) / 360;
+    const y = pad.top + (1-frac) * (h - pad.top - pad.bottom);
+    ctx.beginPath();
+    ctx.arc(x, y, 1.6, 0, Math.PI*2);
+    ctx.fill();
+  });
+  drawTimeLabels(ctx, w, h, pad, tMin, tMax);
+}
+
+function drawSpeedChart(){
+  const canvas = document.getElementById("chartSpeed");
+  const {ctx,w,h} = setupCanvas(canvas);
+  const pad = {left:26, right:8, top:6, bottom:16};
+  if (buffer.length < 2){
+    drawChartFrame(ctx,w,h,pad,[{frac:1,label:""},{frac:0,label:"0"}]);
+    return;
+  }
+  const allSpeeds = buffer.flatMap(p => [p.avs, p.mxs]).filter(v => v !== null && isFinite(v));
+  const maxV = Math.max(1, ...allSpeeds) * 1.15;
+  const yTicks = [0,0.25,0.5,0.75,1].map(f => ({frac:f, label:(maxV*f).toFixed(1)}));
+  drawChartFrame(ctx, w, h, pad, yTicks);
+  const tMin = buffer[0].t, tMax = buffer[buffer.length-1].t;
+  drawLine(ctx, buffer.map(p=>({t:p.t, v:p.avs})), tMin, tMax, 0, maxV, w, h, pad, "#5b8dd6");
+  drawLine(ctx, buffer.map(p=>({t:p.t, v:p.mxs})), tMin, tMax, 0, maxV, w, h, pad, "#d65b5b");
+  drawTimeLabels(ctx, w, h, pad, tMin, tMax);
+}
+
+function drawLine(ctx, points, tMin, tMax, vMin, vMax, w, h, pad, color){
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  let started = false;
+  points.forEach(p => {
+    if (p.v === null || !isFinite(p.v)) { started = false; return; }
+    const x = xPos(p.t, tMin, tMax, w, pad);
+    const frac = vMax === vMin ? 0.5 : (p.v - vMin) / (vMax - vMin);
+    const y = pad.top + (1 - Math.max(0,Math.min(1,frac))) * (h - pad.top - pad.bottom);
+    if (!started){ ctx.moveTo(x,y); started = true; } else { ctx.lineTo(x,y); }
+  });
+  ctx.stroke();
+}
+
+window.addEventListener("resize", () => redrawAll());
+</script>
+</body>
+</html>
