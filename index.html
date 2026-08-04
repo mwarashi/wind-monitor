@@ -16,9 +16,9 @@
     background: radial-gradient(ellipse at 50% -10%, #223049 0%, var(--navy) 45%, var(--navy-deep) 100%);
     font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic", system-ui, sans-serif;
     color: var(--ink); overscroll-behavior: none; }
-  .app{ max-width: 480px; margin: 0 auto; min-height: 100dvh; padding: 18px 18px 32px;
-    display: flex; flex-direction: column; gap: 14px; }
-  header{ display:flex; justify-content: space-between; align-items: baseline; padding: 4px 4px 0; }
+  .app{ max-width: 480px; margin: 0 auto; min-height: 100dvh; padding: 12px 12px 20px;
+    display: flex; flex-direction: column; gap: 10px; }
+  header{ display:flex; justify-content: space-between; align-items: baseline; padding: 2px 4px 0; }
   .brand{ font-size: 13px; letter-spacing: 0.14em; color: var(--brass); text-transform: uppercase; }
   .brand small{ display:block; color: var(--ink-dim); letter-spacing: 0.05em; font-size: 11px; margin-top:2px; }
   .status{ display:flex; align-items:center; gap:6px; font-size:12px; color: var(--ink-dim); }
@@ -26,45 +26,49 @@
   .status.ok .dot{ background: var(--good); box-shadow: 0 0 8px var(--good); }
   .status.err .dot{ background: var(--alert); box-shadow: 0 0 8px var(--alert); }
   .panel{ background: linear-gradient(180deg, #1c2537, #141b29); border: 1px solid #2c3850;
-    border-radius: 20px; padding: 18px 16px;
-    box-shadow: 0 20px 40px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04); }
-  .station-name{ font-size: 16px; font-weight: 800; color: var(--ink); }
-  .station-time{ font-size: 12px; color: var(--ink-dim); margin-top: 2px; }
-  .info-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin-top: 14px; }
-  .info-label{ font-size: 11px; color: var(--ink-dim); letter-spacing: 0.04em; }
-  .info-val{ font-size: 19px; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
-  .info-val .unit{ font-size: 12px; color: var(--ink-dim); font-weight: 500; margin-left:2px; }
-  .dial-wrap{ display:flex; justify-content:center; margin: 14px 0 4px; }
-  svg#compass{ width: 100%; max-width: 220px; height:auto; }
+    border-radius: 16px; padding: 12px 14px;
+    box-shadow: 0 14px 28px -18px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04); }
+  .station-name{ font-size: 15px; font-weight: 800; color: var(--ink); }
+  .station-time{ font-size: 11px; color: var(--ink-dim); margin-top: 1px; }
+  .top-row{ display:flex; align-items:center; gap:14px; margin-top: 8px; }
+  .compass-col{ flex: 0 0 auto; display:flex; flex-direction:column; align-items:center; }
+  .info-col{ flex: 1 1 auto; display:flex; flex-direction:column; justify-content:center; gap:9px; min-width:0; }
+  .info-row{ display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px solid #232d42; padding-bottom:7px; }
+  .info-row:last-child{ border-bottom:none; padding-bottom:0; }
+  .info-row-label{ font-size:11px; color: var(--ink-dim); letter-spacing:0.02em; white-space:nowrap; }
+  .info-row-val{ font-size:16.5px; font-weight:700; font-variant-numeric: tabular-nums; }
+  .info-row-val .unit{ font-size:10.5px; color: var(--ink-dim); font-weight:500; margin-left:2px; }
+  .dial-wrap{ display:flex; justify-content:center; margin: 0; }
+  svg#compass{ width: 100%; max-width: 150px; height:auto; }
   .dial-face{ fill: var(--dial); }
   .dial-ring{ fill:none; stroke: var(--dial-line); }
   .tick-major{ stroke:#2b3648; stroke-width:2.5; }
   .tick-minor{ stroke:#2b3648; stroke-width:1.2; opacity:0.6; }
-  .dir-label{ fill:#33405a; font-size:19px; font-weight:800; font-family: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif; }
+  .dir-label{ fill:#33405a; font-size:15px; font-weight:800; font-family: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif; }
   .needle{ transition: transform 0.6s cubic-bezier(.34,1.4,.64,1); transform-origin: 150px 150px; }
   .needle-arrow{ fill: var(--brass); }
   .hub{ fill: var(--navy-deep); stroke: var(--brass); stroke-width:2; }
-  .center-deg{ fill:#33405a; font-size:22px; font-weight:800; font-family: system-ui, sans-serif; }
-  .dir-word{ text-align:center; font-size:14px; color: var(--ink-dim); margin-top: 4px; }
-  .dir-word b{ color: var(--ink); font-size:16px; }
+  .center-deg{ fill:#33405a; font-size:18px; font-weight:800; font-family: system-ui, sans-serif; }
+  .dir-word{ text-align:center; font-size:12.5px; color: var(--ink-dim); margin-top: 2px; }
+  .dir-word b{ color: var(--ink); font-size:14px; }
   .speed-row{ display:flex; align-items:flex-end; justify-content:center; gap:10px; margin-top: 14px; }
   .speed-num{ font-size: 56px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -1px; }
   .speed-unit{ font-size: 17px; color: var(--ink-dim); padding-bottom: 7px; cursor:pointer; border-bottom: 1px dashed var(--ink-dim); }
   .speed-cap{ text-align:center; font-size:12px; color: var(--ink-dim); margin-top:2px; }
-  .badge-wrap{ display:flex; justify-content:center; margin-top: 14px; }
-  .badge{ display:inline-block; padding: 7px 16px; border-radius: 999px; font-size: 14px; font-weight:700; }
+  .badge-wrap{ display:flex; justify-content:center; margin-top: 10px; }
+  .badge{ display:inline-block; padding: 5px 14px; border-radius: 999px; font-size: 12.5px; font-weight:700; }
   .badge.calm{ background: rgba(111,168,201,0.18); color: var(--calm); border:1px solid rgba(111,168,201,0.4);}
   .badge.good{ background: rgba(63,157,111,0.18); color: var(--good); border:1px solid rgba(63,157,111,0.4);}
   .badge.caution{ background: rgba(217,147,47,0.18); color: var(--caution); border:1px solid rgba(217,147,47,0.4);}
   .badge.alert{ background: rgba(201,79,62,0.18); color: var(--alert); border:1px solid rgba(201,79,62,0.4);}
-  .chart-title{ display:flex; justify-content: space-between; align-items:baseline; margin-bottom: 8px; }
-  .chart-title h4{ margin:0; font-size: 13px; letter-spacing:0.04em; color: var(--brass); font-weight:700; }
-  .legend{ display:flex; gap:12px; font-size:11px; color: var(--ink-dim); }
+  .chart-title{ display:flex; justify-content: space-between; align-items:baseline; margin-bottom: 4px; }
+  .chart-title h4{ margin:0; font-size: 12px; letter-spacing:0.04em; color: var(--brass); font-weight:700; }
+  .legend{ display:flex; gap:10px; font-size:10px; color: var(--ink-dim); }
   .legend span{ display:inline-flex; align-items:center; gap:4px; }
   .legend i{ width:10px; height:3px; border-radius:2px; display:inline-block; }
   canvas.chart{ width:100%; display:block; }
-  .meta{ display:flex; justify-content: space-between; font-size:12px; color: var(--ink-dim); padding: 2px 4px; }
-  .note{ font-size: 12px; color: var(--ink-dim); text-align:center; line-height:1.7; padding: 0 10px; }
+  .meta{ display:flex; justify-content: space-between; font-size:11px; color: var(--ink-dim); padding: 0 4px; }
+  .note{ font-size: 10.5px; color: var(--ink-dim); text-align:center; line-height:1.5; padding: 0 6px; }
   .gear{ background:none; border:none; color: var(--ink-dim); font-size:18px; cursor:pointer; padding: 2px 4px; }
   dialog#settings{ border:none; border-radius:16px; padding:0; width: 88%; max-width: 380px; background: var(--navy); color: var(--ink); }
   dialog#settings::backdrop{ background: rgba(0,0,0,0.55); }
@@ -97,41 +101,45 @@
     <div class="station-name" id="stationName">計測地点</div>
     <div class="station-time" id="stationTime">最終更新: --</div>
 
-    <div class="dial-wrap">
-      <svg id="compass" viewBox="0 0 300 300">
-        <circle class="dial-face" cx="150" cy="150" r="140"/>
-        <circle class="dial-ring" cx="150" cy="150" r="140" stroke-width="2"/>
-        <circle class="dial-ring" cx="150" cy="150" r="118" stroke-width="1"/>
-        <g id="ticks"></g>
-        <text class="dir-label" x="150" y="36" text-anchor="middle">北</text>
-        <text class="dir-label" x="264" y="158" text-anchor="middle">東</text>
-        <text class="dir-label" x="150" y="280" text-anchor="middle">南</text>
-        <text class="dir-label" x="36" y="158" text-anchor="middle">西</text>
-        <g class="needle" id="needle">
-          <polygon class="needle-arrow" points="150,36 138,168 150,148 162,168"/>
-        </g>
-        <circle class="hub" cx="150" cy="150" r="15"/>
-        <text class="center-deg" x="150" y="196" text-anchor="middle" id="degText">--°</text>
-      </svg>
-    </div>
-    <div class="dir-word">平均風向 <b id="cardinalWord">--</b> から</div>
+    <div class="top-row">
+      <div class="compass-col">
+        <div class="dial-wrap">
+          <svg id="compass" viewBox="0 0 300 300">
+            <circle class="dial-face" cx="150" cy="150" r="140"/>
+            <circle class="dial-ring" cx="150" cy="150" r="140" stroke-width="2"/>
+            <circle class="dial-ring" cx="150" cy="150" r="118" stroke-width="1"/>
+            <g id="ticks"></g>
+            <text class="dir-label" x="150" y="36" text-anchor="middle">北</text>
+            <text class="dir-label" x="264" y="158" text-anchor="middle">東</text>
+            <text class="dir-label" x="150" y="280" text-anchor="middle">南</text>
+            <text class="dir-label" x="36" y="158" text-anchor="middle">西</text>
+            <g class="needle" id="needle">
+              <polygon class="needle-arrow" points="150,36 138,168 150,148 162,168"/>
+            </g>
+            <circle class="hub" cx="150" cy="150" r="15"/>
+            <text class="center-deg" x="150" y="196" text-anchor="middle" id="degText">--°</text>
+          </svg>
+        </div>
+        <div class="dir-word">平均風向 <b id="cardinalWord">--</b> から</div>
+      </div>
 
-    <div class="info-grid">
-      <div class="info-cell">
-        <div class="info-label">平均風速</div>
-        <div class="info-val" id="infoAvs">-- <span class="unit">m/s</span></div>
-      </div>
-      <div class="info-cell">
-        <div class="info-label">最大瞬間風速</div>
-        <div class="info-val" id="infoMax">-- <span class="unit">m/s</span></div>
-      </div>
-      <div class="info-cell">
-        <div class="info-label">電源電圧</div>
-        <div class="info-val" id="infoBatt">-- <span class="unit">V</span></div>
-      </div>
-      <div class="info-cell">
-        <div class="info-label">電波強度</div>
-        <div class="info-val" id="infoRssi">-- <span class="unit">dBm</span></div>
+      <div class="info-col">
+        <div class="info-row">
+          <span class="info-row-label">平均風速</span>
+          <span class="info-row-val" id="infoAvs">-- <span class="unit">m/s</span></span>
+        </div>
+        <div class="info-row">
+          <span class="info-row-label">最大瞬間風速</span>
+          <span class="info-row-val" id="infoMax">-- <span class="unit">m/s</span></span>
+        </div>
+        <div class="info-row">
+          <span class="info-row-label">電源電圧</span>
+          <span class="info-row-val" id="infoBatt">-- <span class="unit">V</span></span>
+        </div>
+        <div class="info-row">
+          <span class="info-row-label">電波強度</span>
+          <span class="info-row-val" id="infoRssi">-- <span class="unit">dBm</span></span>
+        </div>
       </div>
     </div>
 
@@ -143,7 +151,7 @@
       <h4>風向の推移</h4>
       <div class="legend"><span><i style="background:var(--brass)"></i>平均風向</span></div>
     </div>
-    <canvas class="chart" id="chartDir" height="120"></canvas>
+    <canvas class="chart" id="chartDir" height="80"></canvas>
   </div>
 
   <div class="panel">
@@ -154,7 +162,7 @@
         <span><i style="background:#d65b5b"></i>最大瞬間</span>
       </div>
     </div>
-    <canvas class="chart" id="chartSpeed" height="120"></canvas>
+    <canvas class="chart" id="chartSpeed" height="80"></canvas>
   </div>
 
   <div class="panel">
@@ -162,7 +170,7 @@
       <h4>電圧の推移</h4>
       <div class="legend"><span><i style="background:#8fd67a"></i>電源電圧</span></div>
     </div>
-    <canvas class="chart" id="chartVolt" height="100"></canvas>
+    <canvas class="chart" id="chartVolt" height="70"></canvas>
   </div>
 
   <div class="meta">
