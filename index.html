@@ -42,8 +42,7 @@
   .tick-minor{ stroke:#2b3648; stroke-width:1.2; opacity:0.6; }
   .dir-label{ fill:#33405a; font-size:19px; font-weight:800; font-family: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif; }
   .needle{ transition: transform 0.6s cubic-bezier(.34,1.4,.64,1); transform-origin: 150px 150px; }
-  .needle-n{ fill: var(--brass); }
-  .needle-s{ fill: #7a6640; }
+  .needle-arrow{ fill: var(--brass); }
   .hub{ fill: var(--navy-deep); stroke: var(--brass); stroke-width:2; }
   .center-deg{ fill:#33405a; font-size:22px; font-weight:800; font-family: system-ui, sans-serif; }
   .dir-word{ text-align:center; font-size:14px; color: var(--ink-dim); margin-top: 4px; }
@@ -52,11 +51,6 @@
   .speed-num{ font-size: 56px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -1px; }
   .speed-unit{ font-size: 17px; color: var(--ink-dim); padding-bottom: 7px; cursor:pointer; border-bottom: 1px dashed var(--ink-dim); }
   .speed-cap{ text-align:center; font-size:12px; color: var(--ink-dim); margin-top:2px; }
-  .meter{ position: relative; height: 10px; border-radius: 6px;
-    background: linear-gradient(90deg, var(--calm) 0%, var(--good) 30%, var(--caution) 60%, var(--alert) 100%);
-    margin-top: 14px; opacity: 0.35; }
-  .meter .pin{ position:absolute; top:-5px; width:3px; height:20px; background: var(--ink);
-    border-radius:2px; transform: translateX(-50%); box-shadow: 0 0 6px rgba(0,0,0,0.6); transition: left 0.6s ease; }
   .badge-wrap{ display:flex; justify-content:center; margin-top: 14px; }
   .badge{ display:inline-block; padding: 7px 16px; border-radius: 999px; font-size: 14px; font-weight:700; }
   .badge.calm{ background: rgba(111,168,201,0.18); color: var(--calm); border:1px solid rgba(111,168,201,0.4);}
@@ -103,10 +97,29 @@
     <div class="station-name" id="stationName">計測地点</div>
     <div class="station-time" id="stationTime">最終更新: --</div>
 
+    <div class="dial-wrap">
+      <svg id="compass" viewBox="0 0 300 300">
+        <circle class="dial-face" cx="150" cy="150" r="140"/>
+        <circle class="dial-ring" cx="150" cy="150" r="140" stroke-width="2"/>
+        <circle class="dial-ring" cx="150" cy="150" r="118" stroke-width="1"/>
+        <g id="ticks"></g>
+        <text class="dir-label" x="150" y="36" text-anchor="middle">北</text>
+        <text class="dir-label" x="264" y="158" text-anchor="middle">東</text>
+        <text class="dir-label" x="150" y="280" text-anchor="middle">南</text>
+        <text class="dir-label" x="36" y="158" text-anchor="middle">西</text>
+        <g class="needle" id="needle">
+          <polygon class="needle-arrow" points="150,36 138,168 150,148 162,168"/>
+        </g>
+        <circle class="hub" cx="150" cy="150" r="15"/>
+        <text class="center-deg" x="150" y="196" text-anchor="middle" id="degText">--°</text>
+      </svg>
+    </div>
+    <div class="dir-word">平均風向 <b id="cardinalWord">--</b> から</div>
+
     <div class="info-grid">
       <div class="info-cell">
-        <div class="info-label">風向</div>
-        <div class="info-val" id="infoDir">-- <span class="unit">°</span></div>
+        <div class="info-label">平均風速</div>
+        <div class="info-val" id="infoAvs">-- <span class="unit">m/s</span></div>
       </div>
       <div class="info-cell">
         <div class="info-label">最大瞬間風速</div>
@@ -122,33 +135,6 @@
       </div>
     </div>
 
-    <div class="dial-wrap">
-      <svg id="compass" viewBox="0 0 300 300">
-        <circle class="dial-face" cx="150" cy="150" r="140"/>
-        <circle class="dial-ring" cx="150" cy="150" r="140" stroke-width="2"/>
-        <circle class="dial-ring" cx="150" cy="150" r="118" stroke-width="1"/>
-        <g id="ticks"></g>
-        <text class="dir-label" x="150" y="36" text-anchor="middle">北</text>
-        <text class="dir-label" x="264" y="158" text-anchor="middle">東</text>
-        <text class="dir-label" x="150" y="280" text-anchor="middle">南</text>
-        <text class="dir-label" x="36" y="158" text-anchor="middle">西</text>
-        <g class="needle" id="needle">
-          <polygon class="needle-n" points="150,42 140,150 160,150"/>
-          <polygon class="needle-s" points="150,258 140,150 160,150"/>
-        </g>
-        <circle class="hub" cx="150" cy="150" r="15"/>
-        <text class="center-deg" x="150" y="196" text-anchor="middle" id="degText">--°</text>
-      </svg>
-    </div>
-    <div class="dir-word">平均風向 <b id="cardinalWord">--</b> から</div>
-
-    <div class="speed-row">
-      <div class="speed-num" id="speedNum">--</div>
-      <div class="speed-unit" id="unitToggle">m/s</div>
-    </div>
-    <div class="speed-cap">平均風速（直近の受信間隔平均）</div>
-
-    <div class="meter"><div class="pin" id="meterPin" style="left:0%"></div></div>
     <div class="badge-wrap"><div class="badge calm" id="badge">受信待ち</div></div>
   </div>
 
@@ -251,15 +237,12 @@ const els = {
   needle: document.getElementById("needle"),
   degText: document.getElementById("degText"),
   cardinalWord: document.getElementById("cardinalWord"),
-  speedNum: document.getElementById("speedNum"),
-  unitToggle: document.getElementById("unitToggle"),
-  meterPin: document.getElementById("meterPin"),
   badge: document.getElementById("badge"),
   status: document.getElementById("status"),
   statusText: document.getElementById("statusText"),
   stationName: document.getElementById("stationName"),
   stationTime: document.getElementById("stationTime"),
-  infoDir: document.getElementById("infoDir"),
+  infoAvs: document.getElementById("infoAvs"),
   infoMax: document.getElementById("infoMax"),
   infoBatt: document.getElementById("infoBatt"),
   infoRssi: document.getElementById("infoRssi"),
@@ -307,12 +290,6 @@ function initSettingsUI(){
     els.stationName.textContent = state.name;
     dialog.close();
     startPolling();
-  };
-
-  els.unitToggle.onclick = () => {
-    unit = unit === "ms" ? "kmh" : "ms";
-    els.unitToggle.textContent = unit === "ms" ? "m/s" : "km/h";
-    redrawAll();
   };
 }
 
@@ -375,23 +352,15 @@ function redrawAll(){
     els.needle.style.transform = `rotate(${dirDeg}deg)`;
     els.degText.textContent = Math.round(dirDeg) + "°";
     els.cardinalWord.textContent = degToCardinalJa(dirDeg);
-    els.infoDir.innerHTML = degToCardinalJa(dirDeg) + ` <span class="unit">${Math.round(dirDeg)}°</span>`;
   }
 
-  const unitLabel = unit === "ms" ? "m/s" : "km/h";
-  const conv = v => (v === null || !isFinite(v)) ? null : (unit === "ms" ? v : v * 3.6);
+  const unitLabel = "m/s";
 
-  const dispAvs = conv(latest.avs);
-  els.speedNum.textContent = dispAvs !== null ? dispAvs.toFixed(1) : "--";
-
-  const dispMxs = conv(latest.mxs);
-  els.infoMax.innerHTML = (dispMxs !== null ? dispMxs.toFixed(1) : "--") + ` <span class="unit">${unitLabel}</span>`;
-
+  els.infoAvs.innerHTML = (latest.avs !== null ? latest.avs.toFixed(1) : "--") + ` <span class="unit">${unitLabel}</span>`;
+  els.infoMax.innerHTML = (latest.mxs !== null ? latest.mxs.toFixed(1) : "--") + ` <span class="unit">${unitLabel}</span>`;
   els.infoBatt.innerHTML = (latest.bat !== null ? latest.bat.toFixed(2) : "--") + ' <span class="unit">V</span>';
   els.infoRssi.innerHTML = (latest.rssi !== null ? latest.rssi : "--") + ' <span class="unit">dBm</span>';
 
-  const pct = latest.avs !== null ? Math.max(0, Math.min(100, (latest.avs / (state.alert * 1.4)) * 100)) : 0;
-  els.meterPin.style.left = pct + "%";
   const level = classify(latest.avs);
   els.badge.className = "badge " + level.cls;
   els.badge.textContent = level.label;
@@ -420,6 +389,15 @@ function degToCardinalJa(deg){
   const dirs = ["北","北北東","北東","東北東","東","東南東","南東","南南東","南","南南西","南西","西南西","西","西北西","北西","北北西"];
   const idx = Math.round(deg / 22.5) % 16;
   return dirs[idx];
+}
+
+const CHART_WINDOW_MS = 10 * 60 * 60 * 1000; // グラフに表示する期間（10時間固定）
+
+function getChartWindow(){
+  if (buffer.length === 0) return null;
+  const tMax = buffer[buffer.length - 1].t;
+  const tMin = tMax - CHART_WINDOW_MS;
+  return { tMin, tMax };
 }
 
 function drawTicks(){
@@ -508,10 +486,13 @@ function drawDirChart(){
     {frac:0.25,label:"西"}, {frac:0, label:"北"}
   ];
   drawChartFrame(ctx, w, h, pad, yTicks);
-  if (buffer.length < 2) return;
-  const tMin = buffer[0].t, tMax = buffer[buffer.length-1].t;
+  const win = getChartWindow();
+  if (!win) return;
+  const { tMin, tMax } = win;
+  const points = buffer.filter(p => p.t >= tMin && p.t <= tMax);
+  if (points.length < 2) { drawTimeLabels(ctx, w, h, pad, tMin, tMax); return; }
   ctx.fillStyle = "#c9a961";
-  buffer.forEach(p => {
+  points.forEach(p => {
     if (p.avd === null || !isFinite(p.avd)) return;
     const x = xPos(p.t, tMin, tMax, w, pad);
     const frac = (((p.avd % 360)+360)%360) / 360;
@@ -527,17 +508,24 @@ function drawSpeedChart(){
   const canvas = document.getElementById("chartSpeed");
   const {ctx,w,h} = setupCanvas(canvas);
   const pad = {left:26, right:8, top:6, bottom:16};
-  if (buffer.length < 2){
+  const win = getChartWindow();
+  if (!win){
     drawChartFrame(ctx,w,h,pad,[{frac:1,label:""},{frac:0,label:"0"}]);
     return;
   }
-  const allSpeeds = buffer.flatMap(p => [p.avs, p.mxs]).filter(v => v !== null && isFinite(v));
+  const { tMin, tMax } = win;
+  const points = buffer.filter(p => p.t >= tMin && p.t <= tMax);
+  if (points.length < 2){
+    drawChartFrame(ctx,w,h,pad,[{frac:1,label:""},{frac:0,label:"0"}]);
+    drawTimeLabels(ctx, w, h, pad, tMin, tMax);
+    return;
+  }
+  const allSpeeds = points.flatMap(p => [p.avs, p.mxs]).filter(v => v !== null && isFinite(v));
   const maxV = Math.max(1, ...allSpeeds) * 1.15;
   const yTicks = [0,0.25,0.5,0.75,1].map(f => ({frac:f, label:(maxV*f).toFixed(1)}));
   drawChartFrame(ctx, w, h, pad, yTicks);
-  const tMin = buffer[0].t, tMax = buffer[buffer.length-1].t;
-  drawLine(ctx, buffer.map(p=>({t:p.t, v:p.avs})), tMin, tMax, 0, maxV, w, h, pad, "#5b8dd6");
-  drawLine(ctx, buffer.map(p=>({t:p.t, v:p.mxs})), tMin, tMax, 0, maxV, w, h, pad, "#d65b5b");
+  drawLine(ctx, points.map(p=>({t:p.t, v:p.avs})), tMin, tMax, 0, maxV, w, h, pad, "#5b8dd6");
+  drawLine(ctx, points.map(p=>({t:p.t, v:p.mxs})), tMin, tMax, 0, maxV, w, h, pad, "#d65b5b");
   drawTimeLabels(ctx, w, h, pad, tMin, tMax);
 }
 
@@ -548,13 +536,17 @@ function drawVoltChart(){
   const canvas = document.getElementById("chartVolt");
   const {ctx,w,h} = setupCanvas(canvas);
   const pad = {left:32, right:8, top:6, bottom:16};
-  if (buffer.length < 2){
+  const win = getChartWindow();
+  if (!win){
     drawChartFrame(ctx,w,h,pad,[{frac:1,label:""},{frac:0,label:""}]);
     return;
   }
-  const volts = buffer.map(p => p.bat).filter(v => v !== null && isFinite(v));
+  const { tMin, tMax } = win;
+  const points = buffer.filter(p => p.t >= tMin && p.t <= tMax);
+  const volts = points.map(p => p.bat).filter(v => v !== null && isFinite(v));
   if (volts.length < 2){
     drawChartFrame(ctx,w,h,pad,[{frac:1,label:""},{frac:0,label:""}]);
+    drawTimeLabels(ctx, w, h, pad, tMin, tMax);
     return;
   }
   // 実測レンジより少し余裕を持たせた最小・最大を軸範囲にする
@@ -565,8 +557,7 @@ function drawVoltChart(){
 
   const yTicks = [0,0.5,1].map(f => ({frac:f, label:(vMin + (vMax-vMin)*f).toFixed(2)}));
   drawChartFrame(ctx, w, h, pad, yTicks);
-  const tMin = buffer[0].t, tMax = buffer[buffer.length-1].t;
-  drawLine(ctx, buffer.map(p=>({t:p.t, v:p.bat})), tMin, tMax, vMin, vMax, w, h, pad, "#8fd67a");
+  drawLine(ctx, points.map(p=>({t:p.t, v:p.bat})), tMin, tMax, vMin, vMax, w, h, pad, "#8fd67a");
   drawTimeLabels(ctx, w, h, pad, tMin, tMax);
 }
 
