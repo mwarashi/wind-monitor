@@ -40,7 +40,7 @@
   .dial-ring{ fill:none; stroke: var(--dial-line); }
   .tick-major{ stroke:#2b3648; stroke-width:2.5; }
   .tick-minor{ stroke:#2b3648; stroke-width:1.2; opacity:0.6; }
-  .dir-label{ fill:#33405a; font-size:15px; font-weight:700; font-family: system-ui, sans-serif; }
+  .dir-label{ fill:#33405a; font-size:19px; font-weight:800; font-family: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif; }
   .needle{ transition: transform 0.6s cubic-bezier(.34,1.4,.64,1); transform-origin: 150px 150px; }
   .needle-n{ fill: var(--brass); }
   .needle-s{ fill: #7a6640; }
@@ -128,10 +128,10 @@
         <circle class="dial-ring" cx="150" cy="150" r="140" stroke-width="2"/>
         <circle class="dial-ring" cx="150" cy="150" r="118" stroke-width="1"/>
         <g id="ticks"></g>
-        <text class="dir-label" x="150" y="34" text-anchor="middle">N</text>
-        <text class="dir-label" x="266" y="156" text-anchor="middle">E</text>
-        <text class="dir-label" x="150" y="278" text-anchor="middle">S</text>
-        <text class="dir-label" x="34" y="156" text-anchor="middle">W</text>
+        <text class="dir-label" x="150" y="36" text-anchor="middle">北</text>
+        <text class="dir-label" x="264" y="158" text-anchor="middle">東</text>
+        <text class="dir-label" x="150" y="280" text-anchor="middle">南</text>
+        <text class="dir-label" x="36" y="158" text-anchor="middle">西</text>
         <g class="needle" id="needle">
           <polygon class="needle-n" points="150,42 140,150 160,150"/>
           <polygon class="needle-s" points="150,258 140,150 160,150"/>
@@ -169,6 +169,14 @@
       </div>
     </div>
     <canvas class="chart" id="chartSpeed" height="120"></canvas>
+  </div>
+
+  <div class="panel">
+    <div class="chart-title">
+      <h4>電圧の推移</h4>
+      <div class="legend"><span><i style="background:#8fd67a"></i>電源電圧</span></div>
+    </div>
+    <canvas class="chart" id="chartVolt" height="100"></canvas>
   </div>
 
   <div class="meta">
@@ -223,15 +231,6 @@
 </dialog>
 
 <script>
-/* =====================================================================
-   Ambientのチャネルデータ形式（ゲートウェイのスケッチに合わせた割当）
-   d1: 最大瞬間風速(MXS) m/s
-   d2: 平均風速(AVS)     m/s
-   d3: 平均風向(AVD)     度(0-360)
-   d4: 電池電圧(BAT)     V
-   d5: RSSI              dBm
-   ===================================================================== */
-
 const DEFAULTS = {
   name: "計測地点",
   gasUrl: "",
@@ -324,7 +323,6 @@ function startPolling(){
 }
 
 function parseAmbientTime(s){
-  // "YYYY-MM-DD HH:MM:SS" -> epoch ms (ローカルタイムとして解釈)
   const m = String(s).match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
   if (!m) return Date.now();
   return new Date(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +m[6]).getTime();
@@ -407,6 +405,7 @@ function redrawAll(){
 
   drawDirChart();
   drawSpeedChart();
+  drawVoltChart();
 }
 
 function classify(speedMs){
@@ -490,7 +489,7 @@ function drawTimeLabels(ctx, w, h, pad, tMin, tMax){
 }
 
 function drawEmptyCharts(){
-  ["chartDir","chartSpeed"].forEach(id => {
+  ["chartDir","chartSpeed","chartVolt"].forEach(id => {
     const canvas = document.getElementById(id);
     const {ctx,w,h} = setupCanvas(canvas);
     ctx.clearRect(0,0,w,h);
@@ -539,6 +538,35 @@ function drawSpeedChart(){
   const tMin = buffer[0].t, tMax = buffer[buffer.length-1].t;
   drawLine(ctx, buffer.map(p=>({t:p.t, v:p.avs})), tMin, tMax, 0, maxV, w, h, pad, "#5b8dd6");
   drawLine(ctx, buffer.map(p=>({t:p.t, v:p.mxs})), tMin, tMax, 0, maxV, w, h, pad, "#d65b5b");
+  drawTimeLabels(ctx, w, h, pad, tMin, tMax);
+}
+
+// 電圧の推移グラフ（新規追加）
+// 電池電圧は変動幅が小さいため、固定0開始ではなく実測レンジに合わせた軸にして
+// 変化が見やすくなるようにしている
+function drawVoltChart(){
+  const canvas = document.getElementById("chartVolt");
+  const {ctx,w,h} = setupCanvas(canvas);
+  const pad = {left:32, right:8, top:6, bottom:16};
+  if (buffer.length < 2){
+    drawChartFrame(ctx,w,h,pad,[{frac:1,label:""},{frac:0,label:""}]);
+    return;
+  }
+  const volts = buffer.map(p => p.bat).filter(v => v !== null && isFinite(v));
+  if (volts.length < 2){
+    drawChartFrame(ctx,w,h,pad,[{frac:1,label:""},{frac:0,label:""}]);
+    return;
+  }
+  // 実測レンジより少し余裕を持たせた最小・最大を軸範囲にする
+  const rawMin = Math.min(...volts), rawMax = Math.max(...volts);
+  const margin = Math.max(0.05, (rawMax - rawMin) * 0.2);
+  const vMin = rawMin - margin;
+  const vMax = rawMax + margin;
+
+  const yTicks = [0,0.5,1].map(f => ({frac:f, label:(vMin + (vMax-vMin)*f).toFixed(2)}));
+  drawChartFrame(ctx, w, h, pad, yTicks);
+  const tMin = buffer[0].t, tMax = buffer[buffer.length-1].t;
+  drawLine(ctx, buffer.map(p=>({t:p.t, v:p.bat})), tMin, tMax, vMin, vMax, w, h, pad, "#8fd67a");
   drawTimeLabels(ctx, w, h, pad, tMin, tMax);
 }
 
