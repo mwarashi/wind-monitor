@@ -206,7 +206,7 @@
       </div>
     </div>
     <label for="countInput">取得件数</label>
-    <input id="countInput" type="number" min="10" max="1000" value="200">
+    <input id="countInput" type="number" min="10" max="1000" value="130">
     <div class="row2">
       <div>
         <label for="goodInput">良好開始 (m/s)</label>
@@ -233,7 +233,7 @@ const DEFAULTS = {
   gasUrl: "",
   station: "1",
   interval: 30,
-  count: 200,
+  count: 130,
   goodFrom: 1.5,
   caution: 5,
   alert: 8
@@ -265,8 +265,10 @@ drawTicks();
 initSettingsUI();
 els.stationName.textContent = state.name;
 syncChartPanelHeights();
+loadBufferCache(); // まず前回のデータ（グラフ込み）を即表示
+fetchLatest();      // 現在値だけを高速取得してすぐ更新
 redrawAll();
-startPolling();
+startPolling();     // 以後はグラフ込みの全データ取得を定期的に実施
 
 // コンパスの入っているパネル（compassPanel）の実際の高さを測り、
 // 3つのグラフパネル（.chart-panel）の高さをそれに合わせる
@@ -329,6 +331,32 @@ function parseAmbientTime(s){
   return new Date(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +m[6]).getTime();
 }
 
+// 現在値だけを高速取得（グラフ用の全履歴は待たず、まずここだけ即時反映する）
+async function fetchLatest(){
+  if (!state.gasUrl) return;
+  try{
+    const sep = state.gasUrl.includes("?") ? "&" : "?";
+    const url = `${state.gasUrl}${sep}action=latest&station=${encodeURIComponent(state.station)}`;
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const r = await res.json();
+    if (!r || r.error) return;
+
+    const latest = {
+      t: parseAmbientTime(r.created),
+      mxs: r.d1 !== undefined && r.d1 !== null && r.d1 !== "" ? Number(r.d1) : null,
+      avs: r.d2 !== undefined && r.d2 !== null && r.d2 !== "" ? Number(r.d2) : null,
+      avd: r.d3 !== undefined && r.d3 !== null && r.d3 !== "" ? Number(r.d3) : null,
+      bat: r.d4 !== undefined && r.d4 !== null && r.d4 !== "" ? Number(r.d4) : null,
+      rssi: r.d5 !== undefined && r.d5 !== null && r.d5 !== "" ? Number(r.d5) : null,
+    };
+    updateInfoPanel(latest);
+    setStatus(true, "現在値を表示中（グラフ読み込み中…）");
+  }catch(err){
+    // 軽量取得が失敗しても、この後の通常取得(fetchData)に任せるため無視する
+  }
+}
+
 async function fetchData(){
   if (!state.gasUrl){
     setStatus(false, "プロキシURL未設定");
@@ -351,11 +379,39 @@ async function fetchData(){
       rssi: r.d5 !== undefined && r.d5 !== null && r.d5 !== "" ? Number(r.d5) : null,
     })).sort((a,b) => a.t - b.t);
 
+    saveBufferCache(); // 次回アクセス時に即表示できるよう保存
     setStatus(true);
     redrawAll();
   }catch(err){
     setStatus(false, err.message);
   }
+}
+
+// 直近の取得結果をキャッシュ保存（次回ページを開いた瞬間に表示するため）
+function saveBufferCache(){
+  try{
+    localStorage.setItem("windBufferCache", JSON.stringify({
+      station: state.station,
+      gasUrl: state.gasUrl,
+      savedAt: Date.now(),
+      buffer: buffer
+    }));
+  }catch(e){ /* 保存失敗しても致命的ではないため無視 */ }
+}
+
+// キャッシュがあれば、通信を待たずにまず画面へ反映する
+function loadBufferCache(){
+  try{
+    const cached = JSON.parse(localStorage.getItem("windBufferCache") || "null");
+    if (!cached) return false;
+    // 局番・接続先が変わっている場合はキャッシュを使わない
+    if (cached.station !== state.station || cached.gasUrl !== state.gasUrl) return false;
+    buffer = cached.buffer || [];
+    if (buffer.length === 0) return false;
+    setStatus(true, "前回のデータを表示中（更新中…）");
+    redrawAll();
+    return true;
+  }catch(e){ return false; }
 }
 
 function setStatus(ok, msg){
@@ -372,7 +428,26 @@ function redrawAll(){
     return;
   }
 
-  if (latest.avd !== null){
+  updateInfoPanel(latest);
+
+  els.bufferInfo.textContent = "記録: " + buffer.length + "件";
+  if (buffer.length > 1){
+    const span = (buffer[buffer.length-1].t - buffer[0].t) / 60000;
+    els.rangeInfo.textContent = "表示期間: 約" + Math.round(span) + "分";
+  }
+
+  drawDirChart();
+  drawSpeedChart();
+  drawVoltChart();
+}
+
+// 現在値パネル（コンパス・平均風速・最大瞬間風速・電圧・電波強度・バッジ）だけを更新する。
+// グラフ本体には触れないため、軽量な現在値取得(fetchLatest)からも
+// 通常のグラフ込み更新(redrawAll)からも共通で呼び出せる。
+function updateInfoPanel(latest){
+  if (!latest) return;
+
+  if (latest.avd !== null && latest.avd !== undefined){
     const dirDeg = ((latest.avd % 360) + 360) % 360;
     els.needle.style.transform = `rotate(${dirDeg}deg)`;
     els.degText.textContent = Math.round(dirDeg) + "°";
@@ -391,15 +466,6 @@ function redrawAll(){
   els.badge.textContent = level.label;
 
   els.stationTime.textContent = "最終更新: " + new Date(latest.t).toLocaleString("ja-JP");
-  els.bufferInfo.textContent = "記録: " + buffer.length + "件";
-  if (buffer.length > 1){
-    const span = (buffer[buffer.length-1].t - buffer[0].t) / 60000;
-    els.rangeInfo.textContent = "表示期間: 約" + Math.round(span) + "分";
-  }
-
-  drawDirChart();
-  drawSpeedChart();
-  drawVoltChart();
 }
 
 function classify(speedMs){
