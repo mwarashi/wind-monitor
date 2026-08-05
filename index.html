@@ -239,6 +239,13 @@ const DEFAULTS = {
   alert: 8
 };
 
+// グラフに表示する期間（10時間固定）
+// 【重要】この定数は初期化処理（下の loadBufferCache/redrawAll 呼び出し）より
+// 前で定義する必要がある。末尾で定義すると、前回データがキャッシュ済みの
+// 再訪問時に「初期化前アクセス」の例外でスクリプト全体が停止し、
+// 以後のポーリング（startPolling）が一度も走らなくなる。
+const CHART_WINDOW_MS = 10 * 60 * 60 * 1000;
+
 const state = loadSettings();
 let unit = "ms";
 let pollTimer = null;
@@ -481,8 +488,6 @@ function degToCardinalJa(deg){
   const idx = Math.round(deg / 22.5) % 16;
   return dirs[idx];
 }
-
-const CHART_WINDOW_MS = 10 * 60 * 60 * 1000; // グラフに表示する期間（10時間固定）
 
 function getChartWindow(){
   if (buffer.length === 0) return null;
