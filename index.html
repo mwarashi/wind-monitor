@@ -228,6 +228,8 @@
 </dialog>
 
 <script>
+const CHART_WINDOW_MS = 24 * 60 * 60 * 1000; // グラフに表示する期間（24時間固定）
+
 const DEFAULTS = {
   name: "計測地点",
   gasUrl: "",
@@ -481,8 +483,6 @@ function degToCardinalJa(deg){
   const idx = Math.round(deg / 22.5) % 16;
   return dirs[idx];
 }
-
-const CHART_WINDOW_MS = 24 * 60 * 60 * 1000; // グラフに表示する期間（24時間固定）
 
 function getChartWindow(){
   if (buffer.length === 0) return null;
