@@ -93,7 +93,7 @@
 <div class="app">
 
   <header>
-    <div class="brand">WIND MONITOR<small>風況モニター（Ambient連携）</small></div>
+    <div class="brand">WIND MONITOR<small>風況モニター（観測局リアルタイム連携）</small></div>
     <div style="display:flex; align-items:center; gap:10px;">
       <div class="status" id="status"><span class="dot"></span><span id="statusText">接続中…</span></div>
       <button class="gear" id="openSettings" aria-label="設定">⚙</button>
@@ -181,7 +181,7 @@
     <span id="rangeInfo"></span>
   </div>
 
-  <p class="note">データはAmbient（ambidata.io）に蓄積された観測局の送信履歴を直接読み込んで表示しています。数値は目安であり、実際のフライト判断はご自身の技量と現地状況の確認に基づいて行ってください。</p>
+  <p class="note">データは観測局からGoogle Apps Script経由でリアルタイムに送信された送信履歴を読み込んで表示しています。数値は目安であり、実際のフライト判断はご自身の技量と現地状況の確認に基づいて行ってください。</p>
 </div>
 
 <dialog id="settings">
