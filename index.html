@@ -19,72 +19,74 @@
   .app{ max-width: 480px; margin: 0 auto; min-height: 100dvh; padding: 12px 12px 20px;
     display: flex; flex-direction: column; gap: 10px; }
   header{ display:flex; justify-content: space-between; align-items: baseline; padding: 2px 4px 0; }
-  .brand{ font-size: 13px; letter-spacing: 0.14em; color: var(--brass); text-transform: uppercase; }
-  .brand small{ display:block; color: var(--ink-dim); letter-spacing: 0.05em; font-size: 11px; margin-top:2px; }
-  .status{ display:flex; align-items:center; gap:6px; font-size:12px; color: var(--ink-dim); }
+  .brand{ font-size: 14px; font-weight:700; letter-spacing: 0.14em; color: var(--brass); text-transform: uppercase; }
+  .brand small{ display:block; color: var(--ink); font-weight:700; letter-spacing: 0.05em; font-size: 14px; margin-top:2px; }
+  .status{ display:flex; align-items:center; gap:6px; font-size:14px; font-weight:700; color: var(--ink); }
   .status .dot{ width:8px; height:8px; border-radius:50%; background: var(--ink-dim); transition: background .3s; }
   .status.ok .dot{ background: var(--good); box-shadow: 0 0 8px var(--good); }
   .status.err .dot{ background: var(--alert); box-shadow: 0 0 8px var(--alert); }
   .panel{ background: linear-gradient(180deg, #1c2537, #141b29); border: 1px solid #2c3850;
     border-radius: 16px; padding: 12px 14px;
     box-shadow: 0 14px 28px -18px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04); }
-  .station-name{ font-size: 15px; font-weight: 800; color: var(--ink); }
-  .station-time{ font-size: 11px; color: var(--ink-dim); margin-top: 1px; }
+  .station-name{ font-size: 17px; font-weight: 800; color: var(--ink); }
+  .station-time{ font-size: 13px; font-weight:700; color: var(--ink); margin-top: 1px; }
   .top-row{ display:flex; align-items:center; gap:10px; margin-top: 8px; }
   .compass-col{ flex: 0 0 auto; display:flex; flex-direction:column; align-items:center; }
   .info-col{ flex: 1 1 auto; display:flex; flex-direction:column; justify-content:center; gap:7px; min-width:0; }
   .info-row{ display:flex; justify-content:space-between; align-items:baseline; gap:6px;
     border-bottom:1px solid #232d42; padding-bottom:6px; white-space:nowrap; }
   .info-row:last-child{ border-bottom:none; padding-bottom:0; }
-  .info-row-label{ font-size:10px; color: var(--ink-dim); letter-spacing:0.02em; flex:0 0 auto; }
-  .info-row-val{ font-size:15px; font-weight:700; font-variant-numeric: tabular-nums; flex:0 0 auto; }
-  .info-row-val .unit{ font-size:10px; color: var(--ink-dim); font-weight:500; margin-left:2px; }
+  .info-row-label{ font-size:12px; font-weight:700; color: var(--ink); letter-spacing:0.02em; flex:0 0 auto; }
+  .info-row-val{ font-size:18px; font-weight:800; color: var(--ink); font-variant-numeric: tabular-nums; flex:0 0 auto; }
+  .info-row-val .unit{ font-size:12px; color: var(--ink); font-weight:700; margin-left:2px; }
   .dial-wrap{ display:flex; justify-content:center; margin: 0; }
   svg#compass{ width: 110px; max-width: 110px; height:auto; flex: 0 0 auto; }
   .dial-face{ fill: var(--dial); }
   .dial-ring{ fill:none; stroke: var(--dial-line); }
   .tick-major{ stroke:#2b3648; stroke-width:2.5; }
   .tick-minor{ stroke:#2b3648; stroke-width:1.2; opacity:0.6; }
-  .dir-label{ fill:#33405a; font-size:15px; font-weight:800; font-family: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif; }
+  /* コンパス内の文字は明るいダイヤル盤(--dial)の上に乗るため、白ではなく濃色のまま高コントラストを維持 */
+  .dir-label{ fill:#1c2537; font-size:16px; font-weight:800; font-family: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif; }
   .needle{ transition: transform 0.6s cubic-bezier(.34,1.4,.64,1); transform-origin: 150px 150px; }
   .needle-arrow{ fill: var(--brass); }
   .hub{ fill: var(--navy-deep); stroke: var(--brass); stroke-width:2; }
-  .center-deg{ fill:#33405a; font-size:18px; font-weight:800; font-family: system-ui, sans-serif; }
-  .dir-word{ text-align:center; font-size:12.5px; color: var(--ink-dim); margin-top: 2px; }
-  .dir-word b{ color: var(--ink); font-size:14px; }
+  .center-deg{ fill:#1c2537; font-size:19px; font-weight:800; font-family: system-ui, sans-serif; }
+  .dir-word{ text-align:center; font-size:14px; font-weight:700; color: var(--ink); margin-top: 2px; }
+  .dir-word b{ color: var(--ink); font-size:16px; }
   .speed-row{ display:flex; align-items:flex-end; justify-content:center; gap:10px; margin-top: 14px; }
   .speed-num{ font-size: 56px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -1px; }
-  .speed-unit{ font-size: 17px; color: var(--ink-dim); padding-bottom: 7px; cursor:pointer; border-bottom: 1px dashed var(--ink-dim); }
-  .speed-cap{ text-align:center; font-size:12px; color: var(--ink-dim); margin-top:2px; }
+  .speed-unit{ font-size: 19px; font-weight:700; color: var(--ink); padding-bottom: 7px; cursor:pointer; border-bottom: 1px dashed var(--ink); }
+  .speed-cap{ text-align:center; font-size:14px; font-weight:700; color: var(--ink); margin-top:2px; }
   .badge-wrap{ display:flex; justify-content:center; margin-top: 10px; }
-  .badge{ display:inline-block; padding: 5px 14px; border-radius: 999px; font-size: 12.5px; font-weight:700; }
+  /* バッジの色は風の強さの警戒レベルを示す意味を持つため、白ではなく状態色のまま維持（太字・サイズのみ強調） */
+  .badge{ display:inline-block; padding: 5px 14px; border-radius: 999px; font-size: 14px; font-weight:800; }
   .badge.calm{ background: rgba(111,168,201,0.18); color: var(--calm); border:1px solid rgba(111,168,201,0.4);}
   .badge.good{ background: rgba(63,157,111,0.18); color: var(--good); border:1px solid rgba(63,157,111,0.4);}
   .badge.caution{ background: rgba(217,147,47,0.18); color: var(--caution); border:1px solid rgba(217,147,47,0.4);}
   .badge.alert{ background: rgba(201,79,62,0.18); color: var(--alert); border:1px solid rgba(201,79,62,0.4);}
   .chart-title{ display:flex; justify-content: space-between; align-items:baseline; margin-bottom: 4px; }
-  .chart-title h4{ margin:0; font-size: 12px; letter-spacing:0.04em; color: var(--brass); font-weight:700; }
-  .legend{ display:flex; gap:10px; font-size:10px; color: var(--ink-dim); }
+  .chart-title h4{ margin:0; font-size: 14px; letter-spacing:0.04em; color: var(--brass); font-weight:800; }
+  .legend{ display:flex; gap:10px; font-size:12px; font-weight:700; color: var(--ink); }
   .legend span{ display:inline-flex; align-items:center; gap:4px; }
   .legend i{ width:10px; height:3px; border-radius:2px; display:inline-block; }
   canvas.chart{ width:100%; height:100%; display:block; }
   .chart-panel{ display:flex; flex-direction:column; overflow:hidden; }
   .chart-canvas-wrap{ flex: 1 1 auto; min-height:0; position:relative; }
-  .meta{ display:flex; justify-content: space-between; font-size:11px; color: var(--ink-dim); padding: 0 4px; }
-  .note{ font-size: 10.5px; color: var(--ink-dim); text-align:center; line-height:1.5; padding: 0 6px; }
-  .gear{ background:none; border:none; color: var(--ink-dim); font-size:18px; cursor:pointer; padding: 2px 4px; }
+  .meta{ display:flex; justify-content: space-between; font-size:13px; font-weight:700; color: var(--ink); padding: 0 4px; }
+  .note{ font-size: 13px; font-weight:700; color: var(--ink); text-align:center; line-height:1.5; padding: 0 6px; }
+  .gear{ background:none; border:none; color: var(--ink); font-size:20px; cursor:pointer; padding: 2px 4px; }
   dialog#settings{ border:none; border-radius:16px; padding:0; width: 88%; max-width: 380px; background: var(--navy); color: var(--ink); }
   dialog#settings::backdrop{ background: rgba(0,0,0,0.55); }
   .settings-inner{ padding: 20px; max-height: 80vh; overflow-y:auto; }
-  .settings-inner h3{ margin:0 0 6px; font-size:15px; color: var(--brass); }
-  .settings-inner p.hint{ font-size:11px; color: var(--ink-dim); margin: 0 0 10px; line-height:1.6; }
-  .settings-inner label{ display:block; font-size:12px; color: var(--ink-dim); margin: 12px 0 4px; }
+  .settings-inner h3{ margin:0 0 6px; font-size:16px; color: var(--brass); }
+  .settings-inner p.hint{ font-size:13px; font-weight:700; color: var(--ink); margin: 0 0 10px; line-height:1.6; }
+  .settings-inner label{ display:block; font-size:14px; font-weight:700; color: var(--ink); margin: 12px 0 4px; }
   .settings-inner input{ width:100%; padding:9px 10px; border-radius:8px; border:1px solid #2c3850;
-    background:#111826; color: var(--ink); font-size:14px; }
+    background:#111826; color: var(--ink); font-size:16px; font-weight:700; }
   .settings-inner .row2{ display:flex; gap:10px; }
   .settings-inner .row2 > div{ flex:1; }
   .settings-btns{ display:flex; gap:10px; margin-top:18px; }
-  .settings-btns button{ flex:1; padding:10px; border-radius:8px; border:none; font-size:14px; font-weight:700; cursor:pointer; }
+  .settings-btns button{ flex:1; padding:10px; border-radius:8px; border:none; font-size:15px; font-weight:700; cursor:pointer; }
   .btn-save{ background: var(--brass); color: #241d0d; }
   .btn-close{ background:#26314a; color: var(--ink); }
 </style>
@@ -206,7 +208,7 @@
       </div>
     </div>
     <label for="countInput">取得件数</label>
-    <input id="countInput" type="number" min="10" max="1000" value="300">
+    <input id="countInput" type="number" min="10" max="1000" value="130">
     <div class="row2">
       <div>
         <label for="goodInput">良好開始 (m/s)</label>
@@ -228,14 +230,14 @@
 </dialog>
 
 <script>
-const CHART_WINDOW_MS = 24 * 60 * 60 * 1000; // グラフに表示する期間（24時間固定）
+const CHART_WINDOW_MS = 10 * 60 * 60 * 1000; // グラフに表示する期間（10時間固定）
 
 const DEFAULTS = {
-  name: "計測地点",
-  gasUrl: "",
-  station: "1",
+  name: "神の倉テイクオフ",
+  gasUrl: "https://script.google.com/macros/s/AKfycbzlDXodjK9Q2NcajDFSxxXvMRgftyXFQQOfegvHewEz7ju_HV7zhZqaM2OVJsE6_KH9_A/exec",
+  station: "3",
   interval: 30,
-  count: 300,
+  count: 130,
   goodFrom: 1.5,
   caution: 5,
   alert: 8
@@ -527,8 +529,8 @@ function setupCanvas(canvas){
 function drawChartFrame(ctx, w, h, pad, yTicks){
   ctx.clearRect(0,0,w,h);
   ctx.strokeStyle = "#263048";
-  ctx.fillStyle = "#7d879a";
-  ctx.font = "10px system-ui, sans-serif";
+  ctx.fillStyle = "#eae6da";
+  ctx.font = "bold 11px system-ui, sans-serif";
   ctx.lineWidth = 1;
   yTicks.forEach(t => {
     const y = pad.top + (1 - t.frac) * (h - pad.top - pad.bottom);
@@ -546,8 +548,8 @@ function xPos(t, tMin, tMax, w, pad){
 }
 
 function drawTimeLabels(ctx, w, h, pad, tMin, tMax){
-  ctx.fillStyle = "#7d879a";
-  ctx.font = "10px system-ui, sans-serif";
+  ctx.fillStyle = "#eae6da";
+  ctx.font = "bold 11px system-ui, sans-serif";
   const steps = 4;
   for (let i=0;i<=steps;i++){
     const t = tMin + (tMax - tMin) * (i/steps);
@@ -562,8 +564,8 @@ function drawEmptyCharts(){
     const canvas = document.getElementById(id);
     const {ctx,w,h} = setupCanvas(canvas);
     ctx.clearRect(0,0,w,h);
-    ctx.fillStyle = "#7d879a";
-    ctx.font = "12px system-ui, sans-serif";
+    ctx.fillStyle = "#eae6da";
+    ctx.font = "bold 13px system-ui, sans-serif";
     ctx.fillText("データ待機中…（設定からプロキシURLを入力してください）", 6, h/2);
   });
 }
